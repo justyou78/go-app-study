@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"testing"
 
@@ -14,6 +15,11 @@ import (
 	go test -v ./...
 		./...: 현재 디렉토리부터 하위 모든 디렉토리를 테스트한다.
 		-v (verbose): 테스트 실행의 상세한 출력을 제공
+*/
+/*
+	print: 간단한 출력에 사용하는 표준 출력
+	log: 유연하고 확장 가능한 로깅을 제공. 파일, 시스템 로그등 다양한 출력 장치로 로그를 전송.
+		레벨 등 지정 가능.
 */
 /*
 	t.Fatal: 테스트르를 실패로 표시하고 테스트를 즉시 중단.
@@ -37,13 +43,20 @@ import (
 */
 
 func TestRun(t *testing.T) {
+	l, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatalf("failed to listen port %v", err)
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		return run(ctx)
+		return run(ctx, l)
 	})
 	in := "message"
-	rsp, err := http.Get("http://localhost:18080/" + in)
+	url := fmt.Sprintf("http://%s/%s", l.Addr().String(), in)
+	// 어떤 포트 번호로 리슨하고 있는지 확인.
+	t.Logf("try request to %q", url)
+	rsp, err := http.Get(url)
 	if err != nil {
 		t.Errorf("failed to get: %+v", err)
 	}
