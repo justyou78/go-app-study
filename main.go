@@ -16,7 +16,6 @@ func main() {
 		log.Printf("need port number\n")
 		os.Exit(1)
 	}
-	fmt.Printf("%+v", os.Args)
 	p := os.Args[1]
 
 	l, err := net.Listen("tcp", ":"+p)
